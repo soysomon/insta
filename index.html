@@ -347,85 +347,115 @@
         // SISTEMA DE IDENTIFICACIÓN AVANZADO
         // ============================================
 
-        // 1. FINGERPRINT ÚNICO DEL DISPOSITIVO (Canvas + WebGL + Backup)
+        // 1. FINGERPRINT ÚNICO DEL DISPOSITIVO (Múltiples métodos)
         function generarFingerprint() {
+            const resultados = {
+                metodo: 'multiple',
+                timestamp: new Date().toISOString()
+            };
+
+            // Método 1: Canvas Fingerprint
             try {
-                // Canvas Fingerprint
                 const canvas = document.createElement('canvas');
                 canvas.width = 200;
                 canvas.height = 50;
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                
+                if (ctx) {
+                    ctx.textBaseline = 'top';
+                    ctx.font = '14px Arial';
+                    ctx.fillStyle = '#f60';
+                    ctx.fillRect(125, 1, 62, 20);
+                    ctx.fillStyle = '#069';
+                    ctx.fillText('ID', 2, 15);
+                    
+                    const canvasData = canvas.toDataURL();
+                    resultados.canvas = canvasData.substring(canvasData.length - 50);
+                }
+            } catch (e) {
+                resultados.canvas = 'Bloqueado';
+            }
+
+            // Método 2: WebGL Fingerprint
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                
+                if (gl) {
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    if (debugInfo) {
+                        resultados.webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                        resultados.webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    } else {
+                        resultados.webglVendor = 'Extension no disponible';
+                        resultados.webglRenderer = 'Extension no disponible';
+                    }
+                }
+            } catch (e) {
+                resultados.webglVendor = 'WebGL bloqueado';
+                resultados.webglRenderer = 'WebGL bloqueado';
+            }
+
+            // Método 3: Fingerprint basado en características del sistema
+            const features = [
+                navigator.userAgent,
+                navigator.language,
+                screen.colorDepth,
+                screen.width,
+                screen.height,
+                new Date().getTimezoneOffset(),
+                navigator.hardwareConcurrency || 0,
+                navigator.deviceMemory || 0,
+                navigator.platform
+            ].join('|');
+            
+            // Generar hash simple
+            let hash = 0;
+            for (let i = 0; i < features.length; i++) {
+                const char = features.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            resultados.sistemaHash = Math.abs(hash).toString(36).toUpperCase();
+
+            // Método 4: Fingerprint de fuentes
+            try {
+                const baseFonts = ['monospace', 'sans-serif', 'serif'];
+                const testFonts = ['Arial', 'Verdana', 'Times New Roman', 'Courier New'];
+                const testString = 'mmmmmmmmmmlli';
+                const testSize = '72px';
+                const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                if (!ctx) {
-                    throw new Error('Canvas no disponible');
-                }
+                const baseSizes = {};
+                baseFonts.forEach(font => {
+                    ctx.font = testSize + ' ' + font;
+                    baseSizes[font] = ctx.measureText(testString).width;
+                });
                 
-                ctx.textBaseline = 'top';
-                ctx.font = '14px Arial';
-                ctx.fillStyle = '#f60';
-                ctx.fillRect(125, 1, 62, 20);
-                ctx.fillStyle = '#069';
-                ctx.fillText('Browser ID', 2, 15);
-                ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-                ctx.fillText('Fingerprint', 4, 17);
-                
-                const canvasData = canvas.toDataURL();
-                const canvasHash = canvasData.slice(-100);
-
-                // WebGL Fingerprint
-                let webglVendor = 'No disponible';
-                let webglRenderer = 'No disponible';
-                
-                try {
-                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                    if (gl) {
-                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                        if (debugInfo) {
-                            webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-                            webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                const detectedFonts = [];
+                testFonts.forEach(font => {
+                    let detected = false;
+                    baseFonts.forEach(baseFont => {
+                        ctx.font = testSize + ' ' + font + ',' + baseFont;
+                        const width = ctx.measureText(testString).width;
+                        if (width !== baseSizes[baseFont]) {
+                            detected = true;
                         }
-                    }
-                } catch (e) {
-                    console.warn('WebGL no disponible:', e.message);
-                }
-
-                // Fingerprint de respaldo (basado en características únicas)
-                const backupFingerprint = btoa(
-                    navigator.userAgent + 
-                    screen.width + 
-                    screen.height + 
-                    screen.colorDepth + 
-                    navigator.language + 
-                    new Date().getTimezoneOffset()
-                ).slice(0, 32);
-
-                return {
-                    canvas: canvasHash,
-                    webglVendor: webglVendor,
-                    webglRenderer: webglRenderer,
-                    backup: backupFingerprint,
-                    generado: new Date().toISOString()
-                };
+                    });
+                    if (detected) detectedFonts.push(font);
+                });
+                
+                resultados.fuentesDetectadas = detectedFonts.join(',');
             } catch (e) {
-                console.error('Error generando fingerprint:', e);
-                
-                // Fingerprint de emergencia
-                const emergencyFingerprint = btoa(
-                    navigator.userAgent + 
-                    screen.width + 
-                    screen.height + 
-                    Date.now()
-                ).slice(0, 32);
-                
-                return {
-                    canvas: 'Canvas bloqueado',
-                    webglVendor: 'No disponible',
-                    webglRenderer: 'No disponible',
-                    backup: emergencyFingerprint,
-                    error: e.message,
-                    generado: new Date().toISOString()
-                };
+                resultados.fuentesDetectadas = 'No disponible';
             }
+
+            // Método 5: ID único compuesto (SIEMPRE funcionará)
+            resultados.idUnico = `${resultados.sistemaHash}-${Date.now().toString(36)}`;
+
+            console.log('🔐 Fingerprint generado:', resultados);
+            return resultados;
         }
 
         // 2. INFORMACIÓN COMPLETA DEL DISPOSITIVO
