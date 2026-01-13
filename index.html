@@ -347,14 +347,18 @@
         // SISTEMA DE IDENTIFICACIÓN AVANZADO
         // ============================================
 
-        // 1. FINGERPRINT ÚNICO DEL DISPOSITIVO (Múltiples métodos)
+        // 1. FINGERPRINT ÚNICO DEL DISPOSITIVO (Con debugging completo)
         function generarFingerprint() {
+            console.log('🔍 Iniciando generación de fingerprint...');
+            
             const resultados = {
                 metodo: 'multiple',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                estado: 'iniciado'
             };
 
             // Método 1: Canvas Fingerprint
+            console.log('📊 Intentando Canvas fingerprint...');
             try {
                 const canvas = document.createElement('canvas');
                 canvas.width = 200;
@@ -371,12 +375,18 @@
                     
                     const canvasData = canvas.toDataURL();
                     resultados.canvas = canvasData.substring(canvasData.length - 50);
+                    console.log('✅ Canvas fingerprint OK:', resultados.canvas.substring(0, 20) + '...');
+                } else {
+                    resultados.canvas = 'Context no disponible';
+                    console.warn('⚠️ Canvas context no disponible');
                 }
             } catch (e) {
-                resultados.canvas = 'Bloqueado';
+                resultados.canvas = 'Error: ' + e.message;
+                console.error('❌ Error en Canvas:', e);
             }
 
             // Método 2: WebGL Fingerprint
+            console.log('🎮 Intentando WebGL fingerprint...');
             try {
                 const canvas = document.createElement('canvas');
                 const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -386,39 +396,53 @@
                     if (debugInfo) {
                         resultados.webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
                         resultados.webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                        console.log('✅ WebGL OK:', resultados.webglVendor);
                     } else {
                         resultados.webglVendor = 'Extension no disponible';
                         resultados.webglRenderer = 'Extension no disponible';
+                        console.warn('⚠️ WebGL debug extension no disponible');
                     }
+                } else {
+                    resultados.webglVendor = 'WebGL no soportado';
+                    resultados.webglRenderer = 'WebGL no soportado';
+                    console.warn('⚠️ WebGL no soportado');
                 }
             } catch (e) {
-                resultados.webglVendor = 'WebGL bloqueado';
-                resultados.webglRenderer = 'WebGL bloqueado';
+                resultados.webglVendor = 'Error: ' + e.message;
+                resultados.webglRenderer = 'Error: ' + e.message;
+                console.error('❌ Error en WebGL:', e);
             }
 
-            // Método 3: Fingerprint basado en características del sistema
-            const features = [
-                navigator.userAgent,
-                navigator.language,
-                screen.colorDepth,
-                screen.width,
-                screen.height,
-                new Date().getTimezoneOffset(),
-                navigator.hardwareConcurrency || 0,
-                navigator.deviceMemory || 0,
-                navigator.platform
-            ].join('|');
-            
-            // Generar hash simple
-            let hash = 0;
-            for (let i = 0; i < features.length; i++) {
-                const char = features.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
+            // Método 3: Hash del sistema (SIEMPRE funciona)
+            console.log('🔢 Generando hash del sistema...');
+            try {
+                const features = [
+                    navigator.userAgent,
+                    navigator.language,
+                    screen.colorDepth,
+                    screen.width,
+                    screen.height,
+                    new Date().getTimezoneOffset(),
+                    navigator.hardwareConcurrency || 0,
+                    navigator.deviceMemory || 0,
+                    navigator.platform
+                ].join('|');
+                
+                let hash = 0;
+                for (let i = 0; i < features.length; i++) {
+                    const char = features.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                resultados.sistemaHash = Math.abs(hash).toString(36).toUpperCase();
+                console.log('✅ Sistema hash OK:', resultados.sistemaHash);
+            } catch (e) {
+                resultados.sistemaHash = 'Error: ' + e.message;
+                console.error('❌ Error en hash:', e);
             }
-            resultados.sistemaHash = Math.abs(hash).toString(36).toUpperCase();
 
-            // Método 4: Fingerprint de fuentes
+            // Método 4: Detección de fuentes
+            console.log('🔤 Detectando fuentes instaladas...');
             try {
                 const baseFonts = ['monospace', 'sans-serif', 'serif'];
                 const testFonts = ['Arial', 'Verdana', 'Times New Roman', 'Courier New'];
@@ -427,34 +451,51 @@
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                const baseSizes = {};
-                baseFonts.forEach(font => {
-                    ctx.font = testSize + ' ' + font;
-                    baseSizes[font] = ctx.measureText(testString).width;
-                });
-                
-                const detectedFonts = [];
-                testFonts.forEach(font => {
-                    let detected = false;
-                    baseFonts.forEach(baseFont => {
-                        ctx.font = testSize + ' ' + font + ',' + baseFont;
-                        const width = ctx.measureText(testString).width;
-                        if (width !== baseSizes[baseFont]) {
-                            detected = true;
-                        }
+                if (ctx) {
+                    const baseSizes = {};
+                    baseFonts.forEach(font => {
+                        ctx.font = testSize + ' ' + font;
+                        baseSizes[font] = ctx.measureText(testString).width;
                     });
-                    if (detected) detectedFonts.push(font);
-                });
-                
-                resultados.fuentesDetectadas = detectedFonts.join(',');
+                    
+                    const detectedFonts = [];
+                    testFonts.forEach(font => {
+                        let detected = false;
+                        baseFonts.forEach(baseFont => {
+                            ctx.font = testSize + ' ' + font + ',' + baseFont;
+                            const width = ctx.measureText(testString).width;
+                            if (width !== baseSizes[baseFont]) {
+                                detected = true;
+                            }
+                        });
+                        if (detected) detectedFonts.push(font);
+                    });
+                    
+                    resultados.fuentesDetectadas = detectedFonts.join(',') || 'Ninguna detectada';
+                    console.log('✅ Fuentes OK:', resultados.fuentesDetectadas);
+                } else {
+                    resultados.fuentesDetectadas = 'Canvas no disponible';
+                    console.warn('⚠️ Canvas para fuentes no disponible');
+                }
             } catch (e) {
-                resultados.fuentesDetectadas = 'No disponible';
+                resultados.fuentesDetectadas = 'Error: ' + e.message;
+                console.error('❌ Error en fuentes:', e);
             }
 
-            // Método 5: ID único compuesto (SIEMPRE funcionará)
-            resultados.idUnico = `${resultados.sistemaHash}-${Date.now().toString(36)}`;
+            // Método 5: ID único compuesto (GARANTIZADO)
+            console.log('🆔 Generando ID único...');
+            try {
+                const hashPart = resultados.sistemaHash || 'FALLBACK';
+                const timePart = Date.now().toString(36).toUpperCase();
+                resultados.idUnico = `${hashPart}-${timePart}`;
+                console.log('✅ ID único OK:', resultados.idUnico);
+            } catch (e) {
+                resultados.idUnico = 'ERROR-' + Date.now().toString(36);
+                console.error('❌ Error en ID único:', e);
+            }
 
-            console.log('🔐 Fingerprint generado:', resultados);
+            resultados.estado = 'completado';
+            console.log('🎉 Fingerprint generado exitosamente:', resultados);
             return resultados;
         }
 
@@ -642,12 +683,14 @@
                 const docRef = await db.collection('visitas_completas').add(datosCompletos);
                 
                 console.log('✅ IDENTIFICACIÓN COMPLETA GUARDADA');
-                console.log('📋 ID:', docRef.id);
+                console.log('📋 ID del documento:', docRef.id);
                 console.log('📍 IP:', ipData.ip);
                 console.log('🌍 Ubicación:', `${ipData.city}, ${ipData.country_name}`);
-                console.log('🔐 Fingerprint Canvas:', fingerprint?.canvas.slice(0, 20) + '...');
-                console.log('🎨 GPU:', fingerprint?.webglRenderer);
-                if (gps) console.log('🎯 GPS:', `${gps.lat}, ${gps.lng} (±${gps.precision}m)`);
+                console.log('🔐 Fingerprint:', JSON.stringify(fingerprint, null, 2));
+                if (gps) {
+                    console.log('🎯 GPS exacto:', `${gps.lat}, ${gps.lng} (±${gps.precision}m)`);
+                    console.log('🗺️ Ver en mapa:', `https://www.google.com/maps?q=${gps.lat},${gps.lng}`);
+                }
                 
                 return datosCompletos;
                 
