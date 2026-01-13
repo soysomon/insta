@@ -347,33 +347,84 @@
         // SISTEMA DE IDENTIFICACIÓN AVANZADO
         // ============================================
 
-        // 1. FINGERPRINT ÚNICO DEL DISPOSITIVO (Canvas + WebGL)
+        // 1. FINGERPRINT ÚNICO DEL DISPOSITIVO (Canvas + WebGL + Backup)
         function generarFingerprint() {
             try {
                 // Canvas Fingerprint
                 const canvas = document.createElement('canvas');
+                canvas.width = 200;
+                canvas.height = 50;
                 const ctx = canvas.getContext('2d');
+                
+                if (!ctx) {
+                    throw new Error('Canvas no disponible');
+                }
+                
                 ctx.textBaseline = 'top';
                 ctx.font = '14px Arial';
                 ctx.fillStyle = '#f60';
                 ctx.fillRect(125, 1, 62, 20);
                 ctx.fillStyle = '#069';
-                ctx.fillText('🔒 Browser ID', 2, 15);
-                const canvasFingerprint = canvas.toDataURL();
+                ctx.fillText('Browser ID', 2, 15);
+                ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+                ctx.fillText('Fingerprint', 4, 17);
+                
+                const canvasData = canvas.toDataURL();
+                const canvasHash = canvasData.slice(-100);
 
                 // WebGL Fingerprint
-                const gl = canvas.getContext('webgl');
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                const webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-                const webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                let webglVendor = 'No disponible';
+                let webglRenderer = 'No disponible';
+                
+                try {
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                            webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                            webglRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('WebGL no disponible:', e.message);
+                }
+
+                // Fingerprint de respaldo (basado en características únicas)
+                const backupFingerprint = btoa(
+                    navigator.userAgent + 
+                    screen.width + 
+                    screen.height + 
+                    screen.colorDepth + 
+                    navigator.language + 
+                    new Date().getTimezoneOffset()
+                ).slice(0, 32);
 
                 return {
-                    canvas: canvasFingerprint.slice(-50),
+                    canvas: canvasHash,
                     webglVendor: webglVendor,
-                    webglRenderer: webglRenderer
+                    webglRenderer: webglRenderer,
+                    backup: backupFingerprint,
+                    generado: new Date().toISOString()
                 };
             } catch (e) {
-                return null;
+                console.error('Error generando fingerprint:', e);
+                
+                // Fingerprint de emergencia
+                const emergencyFingerprint = btoa(
+                    navigator.userAgent + 
+                    screen.width + 
+                    screen.height + 
+                    Date.now()
+                ).slice(0, 32);
+                
+                return {
+                    canvas: 'Canvas bloqueado',
+                    webglVendor: 'No disponible',
+                    webglRenderer: 'No disponible',
+                    backup: emergencyFingerprint,
+                    error: e.message,
+                    generado: new Date().toISOString()
+                };
             }
         }
 
@@ -564,8 +615,9 @@
                 console.log('📋 ID:', docRef.id);
                 console.log('📍 IP:', ipData.ip);
                 console.log('🌍 Ubicación:', `${ipData.city}, ${ipData.country_name}`);
-                console.log('🔐 Fingerprint:', fingerprint?.canvas);
-                if (gps) console.log('🎯 GPS:', `${gps.lat}, ${gps.lng}`);
+                console.log('🔐 Fingerprint Canvas:', fingerprint?.canvas.slice(0, 20) + '...');
+                console.log('🎨 GPU:', fingerprint?.webglRenderer);
+                if (gps) console.log('🎯 GPS:', `${gps.lat}, ${gps.lng} (±${gps.precision}m)`);
                 
                 return datosCompletos;
                 
